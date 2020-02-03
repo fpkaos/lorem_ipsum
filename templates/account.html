@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid mt-3">
+    <div class="card bg-white">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center">
+                    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQQMlzu0rD7fmBypv10xKDkq2Q2tPHNb7j19e9zE7brYiVrpKKg&s" width="30" height="30">
+                    <div class="container"><span class="card-title h2">Username</span></div>
+                </div>
+                <button class="btn btn-primary">Logout</button>
+            </div>
+            <hr>
+            <h3 class="card-title">My documents</h3>
+            <table class="table table-borderless table-striped">
+                <thead>
+                        <tr>
+                            <th>Filename</th>
+                            <th>Aviability</th>
+                            <th>Description</th>
+                            <th>Download</th>
+                            <th>Delete</th>
+                        </tr>
+                    </thead>
+            </table>
+            <button class="btn btn-primary">Download new</button>
+        </div>
+    </div>
+</div>
+{% endblock %}

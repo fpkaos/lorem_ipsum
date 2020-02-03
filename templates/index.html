@@ -2,36 +2,78 @@
 
 {% block auth %}
 <span class="navbar-text">
-  <button href="sign_in" class="btn btn-success mr-2">Sign in</button>
+  <a href="{{ url_for('sign_in') }}" class="btn btn-success mr-2">Sign in</a>
 </span>
 {% endblock %}
 
+{% block content %}
+<div class="container-fluid p-4 mt-4 mb-4" >
+  <div class="row justify-content-center">
+        <div class="col-lg-6 mb-3 mt-3">
+            <div class="jumbotron justify-content-center bg-light" style="min-height: 100%">
+                <h1 class="display-3">Lorem ipsum</h1>
+                <p class="lead">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+              </div>
+        </div>
+      
+        <div class="col-lg-3 col-md-12">
+          <div class="card shadow-sm p-2">
+              <div class="card-body">
+            <div class="card-title"><span class="h3">Sign up</span></div>
+              <form>
+              <div class="form-group">
+                  <label for="exampleInputEmail1">Email address</label>
+                  <input type="email" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp">
+              </div>
+              <div class="form-group">
+                  <label for="exampleInputPassword1">Password</label>
+                  <input type="password" class="form-control" id="exampleInputPassword1">
+              </div>
+              <div class="form-group">
+                      <label for="exampleInputPassword1">Password again</label>
+                      <input type="password-again" class="form-control" id="exampleInputPassword1">
+                  </div>
+              <button type="submit" class="btn btn-primary mt-3">Submit</button>
+              </form>
+              </div>
+          </div>
+      </div>
+  </div>
+</div>
+{% endblock %}
+
+
 {% block table %}
-<div class="row justify-content-center">
-        <table class="table">
-                <tbody>
-                    
-                </tbody>
+<div class="container-fluid">
+  <div class="jumbotron bg-white">
+    <div class="row justify-content-center">
+      <table class="table table-borderless table-striped">
+          <thead>
+          </thead>
+          <tbody>
+          </tbody>
         </table>
 
     <div class="col-12">
-            <nav aria-label="Page navigation example">
-                    <ul class="pagination justify-content-center">
-                      <li class="page-item">
-                        <a class="page-link" href="#" aria-label="Previous">
-                          <span aria-hidden="true">&laquo;</span>
-                        </a>
-                      </li>
-                      <li class="page-item"><a class="page-link" href="#">1</a></li>
-                      <li class="page-item"><a class="page-link" href="#">2</a></li>
-                      <li class="page-item"><a class="page-link" href="#">3</a></li>
-                      <li class="page-item">
-                        <a class="page-link" href="#" aria-label="Next">
-                          <span aria-hidden="true">&raquo;</span>
-                        </a>
-                      </li>
-                    </ul>
-                  </nav>
+            <nav>
+              <ul class="pagination justify-content-center">
+                <li class="page-item">
+                  <a class="page-link" href="#" aria-label="Previous">
+                    <span aria-hidden="true">&laquo;</span>
+                  </a>
+                </li>
+                <li class="page-item"><a class="page-link" href="#">1</a></li>
+                <li class="page-item"><a class="page-link" href="#">2</a></li>
+                <li class="page-item"><a class="page-link" href="#">3</a></li>
+                <li class="page-item">
+                  <a class="page-link" href="#" aria-label="Next">
+                    <span aria-hidden="true">&raquo;</span>
+                  </a>
+                </li>
+              </ul>
+            </nav>
         </div>
     </div>
+  </div>
+</div>
 {% endblock %}
