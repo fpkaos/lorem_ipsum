@@ -1,9 +1,8 @@
-
+import os
 from flask import g
 from flask_login import UserMixin
 import mysql.connector as m
-from werkzeug.security import generate_password_hash, check_password_hash
-
+from werkzeug import generate_password_hash, check_password_hash, secure_filename
 
 class DB:
     def __init__(self):
@@ -30,6 +29,44 @@ class DB:
         if db is not None:
             db.close()
 
+class Reg(DB):
+    def is_exists(self):
+        query = 'SELECT id FROM users WHERE login=%s'
+        cursor = self.connection().cursor()
+        cursor.execute(query, (self.login,))
+        return bool(cursor.fetchone())
+
+    def is_passwords_match(self):
+        return bool(self.password == self.password_again)
+
+    def create_user(self):
+        cursor = self.connection().cursor()
+        query = 'INSERT INTO users (login, password, full_name, role) VALUES (%s, %s, ".", 1)'
+        cursor.execute(query, (self.login, self.password))
+        self.connection().commit()
+
+    def make_homedir(self):
+        cursor = self.connection().cursor()
+        query = 'SELECT id FROM users WHERE login=%s'
+        cursor.execute(query, (self.login,))
+        os.mkdir(f'/home/std/{cursor.fetchone()}')
+
+    def __init__(self, login, password, password_again):
+        self.login = login
+        self.password = password
+        self.password_again = password_again
+
+        self.warn = 'User exists'
+        self.success = False
+        if not self.is_exists():
+            if self.is_passwords_match():
+                self.create_user()
+                self.make_homedir()
+                self.success = True
+                return
+            self.warn = 'Passwords doesn\'t match'
+            return
+
 class User(DB, UserMixin):
     def __init__(self, id=None, login=None, password=None):
         if id:
@@ -41,7 +78,7 @@ class User(DB, UserMixin):
                 self.active = True
             except TypeError:
                 return None
-                
+
         elif login and password:
             query = 'SELECT id, password, login FROM users WHERE login=%s'
             cursor = self.connection().cursor()
@@ -51,3 +88,7 @@ class User(DB, UserMixin):
                 self.is_login = bool(self.password == password)
             except TypeError:
                 self.is_login = False
+        
+    def save(self, doc):
+        fs_name = secure_filename(doc.filename)
+        doc.save(os.path.join(f'/home/std/{self.id}', fs_name))

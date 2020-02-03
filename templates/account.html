@@ -44,8 +44,11 @@
             <p class="text-primary">You haven't documents  yet!</p>
             {% endif %}
             <div class="custom-file col-2">
-                    <input type="file" class="custom-file-input" id="new-doc">
-                    <label class="custom-file-label" for="new-doc">Download new</label>
+            <form enctype="multipart/form-data" method="POST">
+                <input type="file" class="custom-file-input" id="new-doc" name="new-doc">
+                <label class="custom-file-label" for="new-doc">Download new</label>
+                <button class="btn btn-primary mt-2">Submit</button>
+            </form>
             </div>
         </div>
     </div>

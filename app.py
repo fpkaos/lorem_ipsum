@@ -1,9 +1,7 @@
 import logging
-import os
 import flask
 import flask_login
-from flask_login import current_user
-from werkzeug.utils import secure_filename
+from flask_login import LoginManager, current_user, logout_user, login_user
 from flask import request, session, redirect, url_for, render_template, send_from_directory
 import utils
 import db
@@ -15,7 +13,7 @@ application = app
 app.config.from_pyfile('../config.py')
 db.DB.app = app
 
-login_manager = flask_login.LoginManager()
+login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 
@@ -29,12 +27,22 @@ def index():
 
 @app.route('/', methods=['POST'])
 def reg():
-    return render_template('index.html')
+    login = request.form['login']
+    password = request.form['password']
+    password_again = request.form['password_again']
+
+    reg = db.Reg(login, password, password_again)
+    if reg.success:
+        user = db.User(login=login, password=password)
+        login_user(user)
+        return redirect(url_for('account', id=user.id))
+    else:
+        return render_template('index.html', warn=reg.warn)
 
 @flask_login.login_required
 @app.route('/logout', methods=['GET'])
 def logout():
-    flask_login.logout_user()
+    logout_user()
     return redirect(url_for('index'))
 
 @app.route('/sign_in', methods=['GET'])
@@ -45,7 +53,7 @@ def sign_in():
 def auth():
     user = db.User(login=request.form['login'], password=request.form['password'])
     if user.is_login:
-        logging.info(flask_login.login_user(user))
+        logging.info(login_user(user))
         return redirect(url_for('account', id=user.id))
     else:
         return render_template('sign_in.html', warn='Incorrect login or password')
@@ -60,13 +68,10 @@ def account(id):
 @flask_login.login_required
 @app.route('/account/<int:id>/', methods=['POST'])
 def file_managment(id):
-    logging.info(request.files.get('new-doc'))
     doc = request.files.get('new-doc')
     if doc and utils.allowed_file(doc.filename):
-        fs_name = secure_filename(doc.filename)
-        #replace /home/std/ to session['home']
-        doc.save(os.path.join(f'/home/std/{id}', fs_name))
-    return render_template('account.html')
+        current_user.save(doc)
+    return render_template('account.html', id=id)
 
 @flask_login.login_required
 @app.route('/account/<int:id>/<filename>')
