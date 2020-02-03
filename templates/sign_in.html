@@ -24,12 +24,12 @@
                         <div class="card-body">
                             <form class="form" method="post">
                                 <div class="form-row">
-                                    <label for="validationServer01">Login</label>
-                                    <input type="text" class="form-control" id="validationServer01" required>
+                                    <label for="login">Login</label>
+                                    <input type="text" class="form-control" name="login" id="login" required>
                                 </div>
                                 <div class="form-row mt-2 mb-2">
-                                    <label for="validationServer01">Password</label>
-                                    <input type="password" class="form-control" id="validationServer01" required>
+                                    <label for="password">Password</label>
+                                    <input type="password" class="form-control" name="password" id="password" required>
                                 </div>
                                 <div class="form-row mt-4">
                                     <button class="btn btn-success container-fluid">Sign in</button>
@@ -37,6 +37,9 @@
                             </form>
                         </div>
                     </div>
+                    {% if warn %}
+                    <p class="text-danger mt-2">{{ warn }}</p>
+                    {% endif %}
                 </div>
             </div>
         </div>

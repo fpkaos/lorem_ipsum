@@ -2,14 +2,26 @@ import logging
 import os
 import flask
 import flask_login
+from flask_login import current_user
 from werkzeug.utils import secure_filename
 from flask import request, session, redirect, url_for, render_template, send_from_directory
 import utils
+import db
+
+logging.basicConfig(filename='/home/std/log',level=logging.DEBUG)
 
 app = flask.Flask(__name__)
 application = app
+app.config.from_pyfile('../config.py')
+db.DB.app = app
 
-app.config.from_pyfile('config.py')
+login_manager = flask_login.LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
+
+@login_manager.user_loader
+def load_user(user_id):
+    return db.User(id=user_id)
 
 @app.route('/', methods=['GET'])
 def index():
@@ -19,20 +31,33 @@ def index():
 def reg():
     return render_template('index.html')
 
+@flask_login.login_required
+@app.route('/logout', methods=['GET'])
+def logout():
+    flask_login.logout_user()
+    return redirect(url_for('index'))
+
 @app.route('/sign_in', methods=['GET'])
 def sign_in():
     return render_template('sign_in.html')
 
 @app.route('/sign_in', methods=['POST'])
 def auth():
-    return redirect(url_for('account'))
+    user = db.User(login=request.form['login'], password=request.form['password'])
+    if user.is_login:
+        logging.info(flask_login.login_user(user))
+        return redirect(url_for('account', id=user.id))
+    else:
+        return render_template('sign_in.html', warn='Incorrect login or password')
 
+@flask_login.login_required
 @app.route('/account/<int:id>/', methods=['GET'])
 def account(id):
-    if True: #session['id'] == id
+    if current_user.id == id:
         return render_template('account.html')
     flask.abort(404)
 
+@flask_login.login_required
 @app.route('/account/<int:id>/', methods=['POST'])
 def file_managment(id):
     logging.info(request.files.get('new-doc'))
@@ -43,6 +68,7 @@ def file_managment(id):
         doc.save(os.path.join(f'/home/std/{id}', fs_name))
     return render_template('account.html')
 
+@flask_login.login_required
 @app.route('/account/<int:id>/<filename>')
 def uploaded_file(filename):
     return send_from_directory('/home/std/',filename)
