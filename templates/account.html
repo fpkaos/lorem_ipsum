@@ -13,18 +13,40 @@
             </div>
             <hr>
             <h3 class="card-title">My documents</h3>
+            {% if docs %}
             <table class="table table-borderless table-striped">
                 <thead>
                         <tr>
                             <th>Filename</th>
-                            <th>Aviability</th>
+                            <th>Visibility</th>
                             <th>Description</th>
                             <th>Download</th>
                             <th>Delete</th>
                         </tr>
                     </thead>
+                    <tbody>
+                            {% for doc in docs %}
+                                <tr>
+                                    <td>{{ doc.name }}</td>
+                                    <td>{{ '<span class="text-success">Public</span>' if doc.public else '<span>Private</span>' }}</td>
+                                    {% if doc.desc %}
+                                    <td>{{ doc.desc }} <button class="btn btn-primary">Edit</button></td>
+                                    {% else %}
+                                    <td><button class="btn btn-success">Create</button></td>
+                                    {% endif %}
+                                    <td><a href={{ doc.download }}></a></td>
+                                    <td><a href="{{ url_for('delete', id=doc.id) }}"></a></td>
+                                </tr>
+                            {% endfor %}
+                    </tbody>
             </table>
-            <button class="btn btn-primary">Download new</button>
+            {% else %}
+            <p class="text-primary">You haven't documents  yet!</p>
+            {% endif %}
+            <div class="custom-file col-2">
+                    <input type="file" class="custom-file-input" id="new-doc">
+                    <label class="custom-file-label" for="new-doc">Download new</label>
+            </div>
         </div>
     </div>
 </div>
