@@ -48,7 +48,7 @@
                                     <td>
                                     <div class="d-flex justify-content-between">
                                     {{ doc.description }} 
-                                    <a class="btn btn-success" href="{{url_for('edit', id=current_user.id, filename=doc.fs_name)}}">Edit</a>
+                                    <a class="btn btn-success" href="{url_for('edit', id=current_user.id, filename=doc.fs_name)}}">Edit</a>
                                     </div>
                                     </td>
                                     {% else %}
