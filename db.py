@@ -5,14 +5,14 @@ from flask_login import UserMixin, AnonymousUserMixin
 import mysql.connector as m
 from werkzeug import generate_password_hash, check_password_hash, secure_filename
 
-import logging
-
-logging.basicConfig(filename='/home/std/log',level=logging.DEBUG)
-
 def unic_filename():
     return hex(random.randint(10**10, 10**20)).strip('0x')
 
 class DB:
+    '''
+    This class provides basic actions with database
+    '''
+
     def __init__(self):
         self.app.teardown_appcontext(self.close_db)
 
@@ -38,6 +38,9 @@ class DB:
             db.close()
 
     def main_table(self):
+        '''
+        This method returns a list of File objects to represent them in the index page
+        '''
         query = '''
         SELECT service_users.id owner, fs_name, name, visibility, description, votes, login, files.id fid FROM `files` INNER JOIN `service_users` ON files.owner = service_users.id INNER JOIN sum_votes ON files.id = sum_votes.fid WHERE files.visibility = 1 ORDER BY votes DESC
         '''
@@ -47,7 +50,11 @@ class DB:
 
 
 class File(DB):
-    def __init__(self, owner, fs_name, name=None, visibility=0, description=None, votes=None, login=None, fid=None):
+    '''
+    This class provides an ORM-like actions with files
+    '''
+
+    def __init__(self, owner, fs_name, name=None, visibility=0,                             description=None, votes=None, login=None, fid=None):
         self.fs_name = fs_name
         self.name = name
         self.owner = owner
@@ -98,6 +105,10 @@ class File(DB):
             
 
 class Reg(DB):
+    '''
+    An etity of this class contains registration states and actions  
+    '''
+
     def is_exists(self, login):
         query = 'SELECT id FROM service_users WHERE login=%s'
         cursor = self.connection().cursor()
@@ -132,10 +143,18 @@ class Reg(DB):
             return
 
 class Anonymous(DB, AnonymousUserMixin):
+    '''
+    This class gives access to anonymous users to display file table on the index page 
+    '''
+
     def __init__(self):
         pass
 
 class User(DB, UserMixin):
+    '''
+    Provides ORM-like actions with users
+    '''
+    
     def __init__(self, id=None, login=None, password=None):
         if id:
             query = 'SELECT * FROM service_users WHERE id=%s'
@@ -160,11 +179,14 @@ class User(DB, UserMixin):
                 self.is_login = False
 
     def insert_file(self, doc, fs_name):
-        query = 'INSERT INTO files (fs_name, name, visibility, description, owner) VALUES (%s, %s, %s, %s, %s)'
+        query = '''
+        INSERT INTO files (fs_name, name, visibility, description, owner) VALUES (%s, %s, %s, %s, %s)
+        '''
         cursor = self.connection().cursor()
         values = (fs_name, secure_filename(doc.filename), 0, '', self.id)
         cursor.execute(query, values)
         self.connection().commit()
+
 
     def get_fid(self, fs_name):
         cursor = self.connection().cursor()
@@ -174,7 +196,9 @@ class User(DB, UserMixin):
 
     def init_votes(self, fid):
         cursor = self.connection().cursor()
-        query = 'INSERT INTO `votes`(`vote`, `voter`, `doc`) VALUES (%s, %s, %s)'
+        query = '''
+        INSERT INTO `votes`(`vote`, `voter`, `doc`) VALUES (%s, %s, %s)
+        '''
         cursor.execute(query, (0, self.id, fid))
         self.connection().commit()
 
@@ -191,10 +215,11 @@ class User(DB, UserMixin):
         self.insert_file(doc, fs_name)
         self.init_votes(self.get_fid(fs_name))
 
+
     def get_files(self):
         query = 'SELECT fs_name, name, visibility, description FROM files WHERE owner=%s'
         cursor = self.connection().cursor()
-        cursor.execute(query, (self.id,))
+        cursor.execute(query, (self.id, ))
         return [File(self.id, *i) for i in cursor.fetchall()]
 
     def delete(self, f):
@@ -212,7 +237,7 @@ class User(DB, UserMixin):
     def get_voted(self):
         query = 'SELECT doc fid, vote FROM votes WHERE voter = %s'
         cursor = self.connection().cursor(named_tuple = True)
-        cursor.execute(query, (self.id,))
+        cursor.execute(query, (self.id, ))
         self.voted = dict(cursor.fetchall())
 
     def upvote(self, fid):

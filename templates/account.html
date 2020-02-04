@@ -48,15 +48,15 @@
                                     <td>
                                     <div class="d-flex justify-content-between">
                                     {{ doc.description }} 
-                                    <a class="btn btn-success" href="{url_for('edit', id=current_user.id, filename=doc.fs_name)}}">Edit</a>
+                                    <a class="btn btn-success" href="{{ url_for('edit', id=current_user.id, filename=doc.fs_name) }}">Edit</a>
                                     </div>
                                     </td>
                                     {% else %}
-                                    <td><a class="btn btn-success" href="{{url_for('edit', id=current_user.id, filename=doc.fs_name)}}">Create</a></td>
+                                    <td><a class="btn btn-success" href="{{ url_for('edit', id=current_user.id, filename=doc.fs_name) }}">Create</a></td>
                                     {% endif %}
 
-                                    <td><a class="btn btn-primary" href="{{ url_for('download', id=current_user.id, filename=doc.fs_name)}}" download>Download</a></td>
-                                    <td><a class="btn btn-danger" href="{{ url_for('delete', id=current_user.id, filename=doc.fs_name)}}">Delete</a></td>
+                                    <td><a class="btn btn-primary" href="{{ url_for('download', id=current_user.id, filename=doc.fs_name) }}" download>Download</a></td>
+                                    <td><a class="btn btn-danger" href="{{ url_for('delete', id=current_user.id, filename=doc.fs_name) }}">Delete</a></td>
                                 </tr>
                             {% endfor %}
                     </tbody>
