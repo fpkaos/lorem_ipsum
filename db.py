@@ -112,7 +112,6 @@ class File(DB):
 
     def update_description(self, description):
         query = 'UPDATE files SET description=%s WHERE owner=%s AND fs_name=%s'
-        logging.info(description)
         if description:
             cursor = self.connection().cursor()
             cursor.execute(query, (description, self.owner, self.fs_name))
@@ -169,7 +168,7 @@ class User(DB, UserMixin):
     '''
     Provides ORM-like actions with users
     '''
-    
+
     def __init__(self, id=None, login=None, password=None):
         if id:
             query = 'SELECT * FROM service_users WHERE id=%s'

@@ -18,7 +18,7 @@ login_manager.init_app(app)
 login_manager.login_view = 'login'
 login_manager.anonymous_user = db.Anonymous
 
-def ext(filename):
+def extension(filename):
     return filename.rsplit('.', 1)[1]
 
 @login_manager.user_loader
@@ -77,7 +77,7 @@ def account(id):
 def file_managment(id):
     doc = request.files.get('new_doc')
     if doc:
-        ext = ext(doc.filename)
+        ext = extension(doc.filename)
         #mv to the config
         allowed = bool(ext in {'txt', 'pdf', 'doc', 'docx', 'xls', 'xlsx'}) 
         if allowed:
