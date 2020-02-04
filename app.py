@@ -3,10 +3,9 @@ import flask
 import flask_login
 from flask_login import LoginManager, current_user, logout_user, login_user
 from flask import request, session, redirect, url_for, render_template, send_from_directory
-import utils
 import db
 
-#logging.basicConfig(filename='/home/std/log',level=logging.DEBUG)
+logging.basicConfig(filename='/home/std/log',level=logging.DEBUG)
 
 app = flask.Flask(__name__)
 application = app
@@ -17,6 +16,9 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 login_manager.anonymous_user = db.Anonymous
+
+def ext(filename):
+    return filename.rsplit('.', 1)[1]
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -72,7 +74,7 @@ def account(id):
 def file_managment(id):
     doc = request.files.get('new_doc')
     if doc:
-        ext = utils.ext(doc.filename)
+        ext = ext(doc.filename)
         allowed = bool(ext in {'txt', 'pdf', 'doc', 'docx', 'xls', 'xlsx'}) #mv to the config
         if allowed:
             current_user.save(doc, ext)
@@ -81,6 +83,7 @@ def file_managment(id):
 @app.route('/download/<int:id>/<filename>')
 def download(id, filename):
     doc = db.File(id, filename)
+    doc.get_visibility()
     if doc.visibility:
         return send_from_directory(f'/home/std/{id}',filename)
     try:
@@ -94,9 +97,8 @@ def download(id, filename):
 def delete(id, filename):
     if current_user.id == id:
         f = db.File(id, filename)
-        msg = f'File {f.name} deleted'
         current_user.delete(f)
-        return redirect(url_for('account', id=id, msg=msg))
+        return redirect(url_for('account', id=id, msg='File deleted'))
 
 @flask_login.login_required
 @app.route('/change_visibility/<int:id>/<filename>')
@@ -105,6 +107,21 @@ def vis(id, filename):
         db.File(id, filename).switch(int(request.args.get('val')))
         return redirect(url_for('account', id=id, msg='Visibility changed'))
     abort(404)
+
+@flask_login.login_required
+@app.route('/edit/<int:id>/<filename>', methods=['GET'])
+def edit(id, filename):
+    doc = db.File(id, filename)
+    doc.get_human_name()
+    doc.get_description()
+    return render_template('edit.html', doc=doc)
+
+@flask_login.login_required
+@app.route('/edit/<int:id>/<filename>', methods=['POST'])
+def edit_post(id, filename):
+    doc = db.File(id, filename)
+    doc.update_description(request.form.get('description'))
+    return redirect(url_for('account', id=id, msg='File changed'))
 
 @flask_login.login_required
 @app.route('/upvote/<int:fid>/')

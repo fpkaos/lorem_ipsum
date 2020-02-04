@@ -45,9 +45,14 @@
                                     {% endif %}
 
                                     {% if doc.description %}
-                                    <td>{{ doc.description }} <button class="btn btn-primary">Edit</button></td>
+                                    <td>
+                                    <div class="d-flex justify-content-between">
+                                    {{ doc.description }} 
+                                    <a class="btn btn-success" href="{{url_for('edit', id=current_user.id, filename=doc.fs_name)}}">Edit</a>
+                                    </div>
+                                    </td>
                                     {% else %}
-                                    <td><button class="btn btn-success">Create</button></td>
+                                    <td><a class="btn btn-success" href="{{url_for('edit', id=current_user.id, filename=doc.fs_name)}}">Create</a></td>
                                     {% endif %}
 
                                     <td><a class="btn btn-primary" href="{{ url_for('download', id=current_user.id, filename=doc.fs_name)}}" download>Download</a></td>

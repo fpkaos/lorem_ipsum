@@ -70,6 +70,33 @@ class File(DB):
             cursor.execute(query, (val, self.owner, self.fs_name))
             self.connection().commit()
 
+    def get_human_name(self):
+        query = 'SELECT name FROM files WHERE owner=%s AND fs_name=%s'
+        cursor = self.connection().cursor()
+        cursor.execute(query, (self.owner, self.fs_name))
+        self.name = cursor.fetchone()[0]
+
+    def get_description(self):
+        query = 'SELECT description FROM files WHERE owner=%s AND fs_name=%s'
+        cursor = self.connection().cursor()
+        cursor.execute(query, (self.owner, self.fs_name))
+        self.description = cursor.fetchone()[0]
+
+    def get_visibility(self):
+        query = 'SELECT visibility FROM files WHERE owner=%s AND fs_name=%s'
+        cursor = self.connection().cursor()
+        cursor.execute(query, (self.owner, self.fs_name))
+        self.visibility = cursor.fetchone()[0]
+
+    def update_description(self, description):
+        query = 'UPDATE files SET description=%s WHERE owner=%s AND fs_name=%s'
+        logging.info(description)
+        if description:
+            cursor = self.connection().cursor()
+            cursor.execute(query, (description, self.owner, self.fs_name))
+            self.connection().commit()
+            
+
 class Reg(DB):
     def is_exists(self, login):
         query = 'SELECT id FROM service_users WHERE login=%s'
@@ -131,30 +158,38 @@ class User(DB, UserMixin):
                 self.get_voted()
             except TypeError:
                 self.is_login = False
-        
-    def save(self, doc, ext):
-        fs_name = unic_filename()
-        files = os.listdir(f'/home/std/{self.id}')
-        while fs_name in files:
-            fs_name = unic_filename() 
-        fs_name = '.'.join([fs_name, ext])
-        doc.save(os.path.join(f'/home/std/{self.id}', fs_name))
 
+    def insert_file(self, doc, fs_name):
         query = 'INSERT INTO files (fs_name, name, visibility, description, owner) VALUES (%s, %s, %s, %s, %s)'
         cursor = self.connection().cursor()
         values = (fs_name, secure_filename(doc.filename), 0, '', self.id)
         cursor.execute(query, values)
         self.connection().commit()
 
+    def get_fid(self, fs_name):
         cursor = self.connection().cursor()
         query = 'SELECT id FROM files WHERE owner=%s AND fs_name=%s'
         cursor.execute(query, (self.id, fs_name))
-        fid = cursor.fetchone()[0]
-        logging.info(fid)
+        return cursor.fetchone()[0]
 
+    def init_votes(self, fid):
+        cursor = self.connection().cursor()
         query = 'INSERT INTO `votes`(`vote`, `voter`, `doc`) VALUES (%s, %s, %s)'
         cursor.execute(query, (0, self.id, fid))
         self.connection().commit()
+
+    def make_fs_name(self, ext):
+        fs_name = unic_filename()
+        files = os.listdir(f'/home/std/{self.id}')
+        while fs_name in files:
+            fs_name = unic_filename() 
+        return '.'.join([fs_name, ext])
+
+    def save(self, doc, ext):
+        fs_name = self.make_fs_name(ext)
+        doc.save(os.path.join(f'/home/std/{self.id}', fs_name))
+        self.insert_file(doc, fs_name)
+        self.init_votes(self.get_fid(fs_name))
 
     def get_files(self):
         query = 'SELECT fs_name, name, visibility, description FROM files WHERE owner=%s'
@@ -164,7 +199,12 @@ class User(DB, UserMixin):
 
     def delete(self, f):
         os.remove(f'/home/std/{self.id}/{f.fs_name}')
-        query = 'DELETE FROM files, votes WHERE owner=%s AND fs_name=%s'
+        query = 'DELETE FROM votes WHERE doc=%s'
+        cursor = self.connection().cursor()
+        cursor.execute(query, (f.fid,))
+        self.connection().commit()
+
+        query = 'DELETE FROM files WHERE owner=%s AND fs_name=%s'
         cursor = self.connection().cursor()
         cursor.execute(query, (self.id, f.fs_name))
         self.connection().commit()
@@ -176,9 +216,6 @@ class User(DB, UserMixin):
         self.voted = dict(cursor.fetchall())
 
     def upvote(self, fid):
-        logging.info(fid)
-        logging.info(self.id)
-        logging.info(self.voted.get(fid))
         if self.voted.get(fid) in range(-1,2):
             query = 'UPDATE votes SET vote=%s WHERE voter=%s AND doc=%s'
         else:
