@@ -30,7 +30,7 @@ class DB:
             'password': self.app.config['MYSQL_PASSWORD'],
             'host': self.app.config['MYSQL_HOST'],
             'database': self.app.config['MYSQL_DATABASE']
-        }
+            }
 
     def close_db(self, e = None):
         db = g.pop('db', None)
@@ -42,7 +42,21 @@ class DB:
         This method returns a list of File objects to represent them in the index page
         '''
         query = '''
-        SELECT service_users.id owner, fs_name, name, visibility, description, votes, login, files.id fid FROM `files` INNER JOIN `service_users` ON files.owner = service_users.id INNER JOIN sum_votes ON files.id = sum_votes.fid WHERE files.visibility = 1 ORDER BY votes DESC
+        SELECT 
+            service_users.id owner, 
+            fs_name, name, 
+            visibility, 
+            description, 
+            votes, 
+            login, 
+            files.id fid 
+        FROM `files` 
+        INNER JOIN `service_users` ON files.owner = service_users.id 
+        INNER JOIN sum_votes ON files.id = sum_votes.fid 
+        WHERE files.visibility = 1 
+        ORDER BY 
+            votes 
+        DESC
         '''
         cursor = self.connection().cursor()
         cursor.execute(query)
@@ -54,7 +68,8 @@ class File(DB):
     This class provides an ORM-like actions with files
     '''
 
-    def __init__(self, owner, fs_name, name=None, visibility=0,                             description=None, votes=None, login=None, fid=None):
+    def __init__(self, owner, fs_name, name=None, visibility=0,
+                 description=None, votes=None, login=None, fid=None):
         self.fs_name = fs_name
         self.name = name
         self.owner = owner
