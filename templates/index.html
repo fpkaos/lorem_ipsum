@@ -7,6 +7,9 @@
 </span>
 {% else %}
 <span class="navbar-text">
+  <a href="{{ url_for('account', id=current_user.id) }}" class="btn mr-2">Account</a>
+</span>
+<span class="navbar-text">
     <a href="{{ url_for('logout') }}" class="btn btn-success mr-2">Logout</a>
 </span>
 {% endif %}
@@ -27,8 +30,8 @@
           <div class="card shadow-sm p-2">
               <div class="card-body">
             <div class="card-title"><span class="h3">Sign up</span></div>
-            {% if warn %}
-            <p class="text-danger mt-2">{{ warn }}</p>
+            {% if request.args.get('warn') %}
+            <p class="text-danger mt-2">{{ request.args.get('warn') }}</p>
             {% endif %}
               <form method="POST">
               <div class="form-group">
@@ -55,10 +58,11 @@
 
 
 {% block table %}
-<div class="container-fluid mt-2">
+<div class="container-fluid mt-4">
   <div class="jumbotron bg-white">
     <h3>Top documents</h3>
     <div class="row justify-content-center ml-1">
+        <div class="table-responsive">
         <table class="table table-borderless table-striped">
             <thead>
                 <tr>
@@ -66,13 +70,40 @@
                     <th>Filename</th>
                     <th>User</th>
                     <th>Description</th>
-                    <th>Download</th>
-                    <th>Vote</th>
+                    <th></th>
+                    <th class="text-center">Vote</th>
                 </tr>
             </thead>
           <tbody>
+            {% for doc in docs %}
+            <tr>
+              <td><div class="ml-2"> {{ doc.votes }}</div></td>
+              <td class="font-weight-bold">{{ doc.name }}</td>
+              <td>{{ doc.login }}</td>
+              <td>{{ doc.description }}</td>
+              <td><a href="{{ url_for('download', id=doc.owner, filename=doc.fs_name)}}" download>Download</a></td>
+              <td class="d-flex justify-content-around">
+                {% if current_user.is_authenticated %}
+                    {% if current_user.voted.get(doc.fid) == 1 %}
+                    <span class="text-success">Upvoted</span>
+                    {% elif current_user.voted.get(doc.fid) == -1 %}
+                    <span class="text-danger">Downvoted</span>
+                    {% else %}
+                    <a class="text-success" href="{{url_for('upvote', fid=doc.fid)}}">Upvote</a> 
+                    <a class="text-danger" href="{{url_for('downvote', fid=doc.fid)}}">Downvote</a>
+                    {% endif %}
+                {% else %}
+                <a class="text-success" href="{{url_for('sign_in')}}">Upvote</a> 
+                <a class="text-danger" href="{{url_for('sign_in')}}">Downvote</a>
+                {% endif %}
+              </td> 
+            </tr>
+            {% else %}
+            <tr>There is no documents yet</tr>
+            {% endfor %}
           </tbody>
         </table>
+        </div>
 
     <div class="col-12">
             <nav>

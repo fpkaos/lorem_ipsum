@@ -1,5 +1,11 @@
 {% extends 'base.html' %}
 
+{% block auth %}
+<span class="navbar-text">
+    <a href="{{ url_for('logout') }}" class="btn btn-success mr-2">Logout</a>
+</span>
+{% endblock %}
+
 {% block content %}
 <div class="container-fluid mt-3">
     <div class="card bg-white">
@@ -9,45 +15,62 @@
                     <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQQMlzu0rD7fmBypv10xKDkq2Q2tPHNb7j19e9zE7brYiVrpKKg&s" width="30" height="30">
                     <div class="container"><span class="card-title h2">{{ current_user.login }}</span></div>
                 </div>
-                <button class="btn btn-primary">Logout</button>
             </div>
             <hr>
+            {% if request.args.get('msg') %}
+            <p class="text-success">{{ request.args.get('msg') }}</p>
+            {% endif %}
             <h3 class="card-title">My documents</h3>
             {% if docs %}
+            <div class="table-responsive">
             <table class="table table-borderless table-striped">
                 <thead>
                         <tr>
                             <th>Filename</th>
                             <th>Visibility</th>
                             <th>Description</th>
-                            <th>Download</th>
-                            <th>Delete</th>
+                            <th></th>
+                            <th></th>
                         </tr>
                     </thead>
                     <tbody>
                             {% for doc in docs %}
+                            
                                 <tr>
                                     <td>{{ doc.name }}</td>
-                                    <td>{{ '<span class="text-success">Public</span>' if doc.public else '<span>Private</span>' }}</td>
-                                    {% if doc.desc %}
-                                    <td>{{ doc.desc }} <button class="btn btn-primary">Edit</button></td>
+                                    {% if not doc.visibility %}
+                                    <td><a class="text-success" href="{{ url_for('vis', id=current_user.id, filename=doc.fs_name, val=1) }}">Make public</a></td>
+                                    {% else %} 
+                                    <td><a class="active-link" href="{{ url_for('vis', id=current_user.id, filename=doc.fs_name, val=0) }}">Make private</a></td>
+                                    {% endif %}
+
+                                    {% if doc.description %}
+                                    <td>{{ doc.description }} <button class="btn btn-primary">Edit</button></td>
                                     {% else %}
                                     <td><button class="btn btn-success">Create</button></td>
                                     {% endif %}
-                                    <td><a href={{ doc.download }}></a></td>
-                                    <td><a href="{{ url_for('delete', id=doc.id) }}"></a></td>
+
+                                    <td><a class="btn btn-primary" href="{{ url_for('download', id=current_user.id, filename=doc.fs_name)}}" download>Download</a></td>
+                                    <td><a class="btn btn-danger" href="{{ url_for('delete', id=current_user.id, filename=doc.fs_name)}}">Delete</a></td>
                                 </tr>
                             {% endfor %}
                     </tbody>
             </table>
+            </div>
             {% else %}
-            <p class="text-primary">You haven't documents  yet!</p>
+            <p class="text-primary">You haven't documents yet!</p>
             {% endif %}
-            <div class="custom-file col-2">
+            <div class="custom-file col-md-3 col-sm-12">
             <form enctype="multipart/form-data" method="POST">
-                <input type="file" class="custom-file-input" id="new-doc" name="new-doc">
-                <label class="custom-file-label" for="new-doc">Download new</label>
-                <button class="btn btn-primary mt-2">Submit</button>
+                <div class="input-group">
+                <div class="custom-file">
+                    <input type="file" class="custom-file-input" id="new_doc" name="new_doc">
+                    <label class="custom-file-label" for="new_doc">Download</label>
+                </div>
+                <div class="input-group-append">
+                    <button class="btn btn-primary" type="submit">Submit</button>
+                </div>
+                </div>
             </form>
             </div>
         </div>

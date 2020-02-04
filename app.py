@@ -6,7 +6,7 @@ from flask import request, session, redirect, url_for, render_template, send_fro
 import utils
 import db
 
-logging.basicConfig(filename='/home/std/log',level=logging.DEBUG)
+#logging.basicConfig(filename='/home/std/log',level=logging.DEBUG)
 
 app = flask.Flask(__name__)
 application = app
@@ -16,6 +16,7 @@ db.DB.app = app
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
+login_manager.anonymous_user = db.Anonymous
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -23,7 +24,8 @@ def load_user(user_id):
 
 @app.route('/', methods=['GET'])
 def index():
-    return render_template('index.html')
+    logging.info(current_user)
+    return render_template('index.html', docs=current_user.main_table())
 
 @app.route('/', methods=['POST'])
 def reg():
@@ -37,7 +39,7 @@ def reg():
         login_user(user)
         return redirect(url_for('account', id=user.id))
     else:
-        return render_template('index.html', warn=reg.warn)
+        return redirect(url_for('index', warn=reg.warn))
 
 @flask_login.login_required
 @app.route('/logout', methods=['GET'])
@@ -62,18 +64,56 @@ def auth():
 @app.route('/account/<int:id>/', methods=['GET'])
 def account(id):
     if current_user.id == id:
-        return render_template('account.html')
+        return render_template('account.html', docs=current_user.get_files())
     flask.abort(404)
 
 @flask_login.login_required
 @app.route('/account/<int:id>/', methods=['POST'])
 def file_managment(id):
-    doc = request.files.get('new-doc')
-    if doc and utils.allowed_file(doc.filename):
-        current_user.save(doc)
-    return render_template('account.html', id=id)
+    doc = request.files.get('new_doc')
+    if doc:
+        ext = utils.ext(doc.filename)
+        allowed = bool(ext in {'txt', 'pdf', 'doc', 'docx', 'xls', 'xlsx'}) #mv to the config
+        if allowed:
+            current_user.save(doc, ext)
+    return redirect(url_for('account', id=id))
+    
+@app.route('/download/<int:id>/<filename>')
+def download(id, filename):
+    doc = db.File(id, filename)
+    if doc.visibility:
+        return send_from_directory(f'/home/std/{id}',filename)
+    try:
+        if current_user.id == id:
+            return send_from_directory(f'/home/std/{id}',filename)
+    except AttributeError:
+            abort(404)
 
 @flask_login.login_required
-@app.route('/account/<int:id>/<filename>')
-def uploaded_file(filename):
-    return send_from_directory('/home/std/',filename)
+@app.route('/delete/<int:id>/<filename>')
+def delete(id, filename):
+    if current_user.id == id:
+        f = db.File(id, filename)
+        msg = f'File {f.name} deleted'
+        current_user.delete(f)
+        return redirect(url_for('account', id=id, msg=msg))
+
+@flask_login.login_required
+@app.route('/change_visibility/<int:id>/<filename>')
+def vis(id, filename):
+    if current_user.id == id:
+        db.File(id, filename).switch(int(request.args.get('val')))
+        return redirect(url_for('account', id=id, msg='Visibility changed'))
+    abort(404)
+
+@flask_login.login_required
+@app.route('/upvote/<int:fid>/')
+def upvote(fid):
+    current_user.upvote(fid)
+    return redirect(url_for('index'))
+
+@flask_login.login_required
+@app.route('/downvote/<int:fid>/')
+def downvote(fid):
+    current_user.downvote(fid)
+    return redirect(url_for('index'))
